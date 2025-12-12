@@ -10,6 +10,12 @@ From the repo root:
 python3 scripts/baseline_stdlib.py --train sample-data/train.csv --test sample-data/test.csv --out submission.csv
 ```
 
+Validate the submission matches `test.csv`:
+
+```bash
+python3 scripts/baseline_stdlib.py --out submission.csv --validate
+```
+
 This writes `submission.csv` with columns:
 
 `user_hash,prediction`

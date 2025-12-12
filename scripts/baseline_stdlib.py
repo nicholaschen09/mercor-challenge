@@ -18,7 +18,7 @@ import csv
 import math
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 
 EPS = 1e-9
@@ -208,11 +208,76 @@ def write_submission(
             writer.writerow([user_hash, f"{p:.10f}"])
 
 
+def iter_csv_rows(path: str) -> Iterable[List[str]]:
+    with open(path, "r", newline="") as f:
+        reader = csv.reader(f)
+        yield next(reader)  # header
+        for row in reader:
+            yield row
+
+
+def validate_submission(submission_path: str, test_path: str) -> None:
+    """
+    Raises ValueError with a helpful message if the submission doesn't match test.csv.
+    Checks:
+    - Header is exactly: user_hash,prediction
+    - Same number of rows as test
+    - Same set of user_hash values as test
+    - No duplicate user_hash
+    - prediction is numeric and in [0, 1]
+    """
+    # Load expected hashes from test.csv
+    test_iter = iter_csv_rows(test_path)
+    test_header = next(test_iter)
+    try:
+        test_user_idx = test_header.index("user_hash")
+    except ValueError as e:
+        raise ValueError("test.csv must contain a user_hash column") from e
+
+    expected: Set[str] = set()
+    for row in test_iter:
+        if test_user_idx < len(row):
+            expected.add(row[test_user_idx])
+    if not expected:
+        raise ValueError("test.csv appears empty or user_hash could not be read")
+
+    # Validate submission rows
+    sub_iter = iter_csv_rows(submission_path)
+    sub_header = next(sub_iter)
+    if sub_header != ["user_hash", "prediction"]:
+        raise ValueError(f"Bad submission header {sub_header!r}. Expected ['user_hash','prediction']")
+
+    seen: Set[str] = set()
+    for row in sub_iter:
+        if len(row) < 2:
+            raise ValueError("Submission has a row with <2 columns")
+        u = row[0]
+        if u in seen:
+            raise ValueError(f"Duplicate user_hash in submission: {u}")
+        seen.add(u)
+        p = safe_float(row[1])
+        if p is None or p < 0.0 or p > 1.0:
+            raise ValueError(f"Invalid prediction for {u}: {row[1]!r} (must be numeric in [0,1])")
+
+    if len(seen) != len(expected):
+        raise ValueError(f"Row count mismatch: submission has {len(seen)} rows, test has {len(expected)} rows")
+
+    missing = expected - seen
+    extra = seen - expected
+    if missing:
+        sample = sorted(list(missing))[:5]
+        raise ValueError(f"Submission missing {len(missing)} user_hash values from test.csv. Example(s): {sample}")
+    if extra:
+        sample = sorted(list(extra))[:5]
+        raise ValueError(f"Submission has {len(extra)} unknown user_hash values not in test.csv. Example(s): {sample}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--train", default="sample-data/train.csv", help="Path to train.csv")
     ap.add_argument("--test", default="sample-data/test.csv", help="Path to test.csv")
     ap.add_argument("--out", default="submission.csv", help="Output submission path")
+    ap.add_argument("--validate", action="store_true", help="Validate the output submission against test.csv")
     args = ap.parse_args()
 
     # Friendly auto-detection if the user’s folder name differs (e.g. data/ vs sample-data/).
@@ -238,6 +303,10 @@ def main() -> int:
 
     feats, w_value, w_missing, bias, prior = fit_from_train(args.train)
     write_submission(args.test, args.out, feats, w_value, w_missing, bias)
+
+    if args.validate:
+        validate_submission(args.out, args.test)
+        print("Validation: OK")
 
     print(f"Wrote {args.out}")
     print(f"Trained on labeled prior P(cheating)= {prior:.4f} (labeled rows only)")
