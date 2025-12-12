@@ -210,10 +210,31 @@ def write_submission(
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--train", default="data/train.csv", help="Path to train.csv")
-    ap.add_argument("--test", default="data/test.csv", help="Path to test.csv")
+    ap.add_argument("--train", default="sample-data/train.csv", help="Path to train.csv")
+    ap.add_argument("--test", default="sample-data/test.csv", help="Path to test.csv")
     ap.add_argument("--out", default="submission.csv", help="Output submission path")
     args = ap.parse_args()
+
+    # Friendly auto-detection if the user’s folder name differs (e.g. data/ vs sample-data/).
+    if not os.path.exists(args.train):
+        for candidate in ("data/train.csv", "sample-data/train.csv"):
+            if os.path.exists(candidate):
+                args.train = candidate
+                break
+    if not os.path.exists(args.test):
+        for candidate in ("data/test.csv", "sample-data/test.csv"):
+            if os.path.exists(candidate):
+                args.test = candidate
+                break
+    if not os.path.exists(args.train) or not os.path.exists(args.test):
+        raise FileNotFoundError(
+            "Could not find train/test CSVs. Tried:\n"
+            f"- {args.train}\n"
+            f"- {args.test}\n"
+            "Common locations:\n"
+            "- data/train.csv and data/test.csv\n"
+            "- sample-data/train.csv and sample-data/test.csv\n"
+        )
 
     feats, w_value, w_missing, bias, prior = fit_from_train(args.train)
     write_submission(args.test, args.out, feats, w_value, w_missing, bias)

@@ -7,7 +7,7 @@ This repo contains a tiny baseline that produces a valid Kaggle submission from 
 From the repo root:
 
 ```bash
-python3 scripts/baseline_stdlib.py --train data/train.csv --test data/test.csv --out submission.csv
+python3 scripts/baseline_stdlib.py --train sample-data/train.csv --test sample-data/test.csv --out submission.csv
 ```
 
 This writes `submission.csv` with columns:
@@ -18,10 +18,10 @@ Upload that file to Kaggle → **Submit Predictions**.
 
 ## Data
 
-- `data/train.csv`: includes `high_conf_clean` and `is_cheating` (labels are missing for unlabeled rows)
-- `data/test.csv`: predict for these rows
-- `data/social_graph.csv`: optional graph edges (not used in the baseline yet)
-- `data/feature_metadata.json`: feature types/ranges/missingness
+- `sample-data/train.csv`: includes `high_conf_clean` and `is_cheating` (labels are missing for unlabeled rows)
+- `sample-data/test.csv`: predict for these rows
+- `sample-data/social_graph.csv`: optional graph edges (not used in the baseline yet)
+- `sample-data/feature_metadata.json`: feature types/ranges/missingness
 
 ## Next steps to improve
 
