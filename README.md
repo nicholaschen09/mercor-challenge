@@ -22,6 +22,14 @@ This writes `submission.csv` with columns:
 
 Upload that file to Kaggle → **Submit Predictions**.
 
+## Better baseline (still no dependencies)
+
+This version learns logistic regression weights, uses `high_conf_clean=1` rows as weak negatives, and adds simple graph features from `social_graph.csv`.
+
+```bash
+python3 scripts/baseline_v2_stdlib.py --out submission.csv --validate --eval
+```
+
 ## Data
 
 - `sample-data/train.csv`: includes `high_conf_clean` and `is_cheating` (labels are missing for unlabeled rows)
