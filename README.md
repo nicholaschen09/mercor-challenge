@@ -30,6 +30,18 @@ This version learns logistic regression weights, uses `high_conf_clean=1` rows a
 python3 scripts/baseline_v2_stdlib.py --out submission.csv --validate --eval
 ```
 
+## Baseline v4 (better training + better graph features, still no dependencies)
+
+```bash
+python3 scripts/baseline_v4_stdlib.py --out submission_v4.csv --validate --eval
+```
+
+If you want it to try a small hyperparameter search:
+
+```bash
+python3 scripts/baseline_v4_stdlib.py --out submission_v4.csv --validate --eval --tune
+```
+
 ## Data
 
 - `sample-data/train.csv`: includes `high_conf_clean` and `is_cheating` (labels are missing for unlabeled rows)
